@@ -1,5 +1,6 @@
 <div align="center">
-  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2338bdf8'/%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect rx='28' width='120' height='120' fill='url(%23g)'/%3E%3Ctext x='60' y='78' font-size='52' text-anchor='middle' fill='white' font-weight='900' font-family='Arial, sans-serif'%3E🌀%3C/text%3E%3C/svg%3E" alt="API Key Manager Logo" width="120" />
+
+  <h1>🌀</h1>
 
   # 🔐 API Key Manager
 
