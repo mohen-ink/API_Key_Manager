@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
+  <title>API Key Vault</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-icon">🌀</div>
+        <div class="brand-text">
+          <h1>API Key 记录管理工具</h1>
+          <p1>by：呱呱⚀⚁⚂⚄⚅Hello World</p1>
+        </div>
+      </div>
+
+      <nav class="top-actions">
+        <button class="nav-btn" id="themeBtn" type="button">深暗主题</button>
+        <button class="nav-btn" id="proxySettingBtn" type="button">代理设置</button>
+        <button class="nav-btn" id="modelTestBtn" type="button">模型测试</button>
+        <button class="nav-btn" id="importBtn" type="button">导入</button>
+        <button class="nav-btn" id="exportBtn" type="button">导出</button>
+        <button class="primary-btn" id="addBtn" type="button">新增配置</button>
+      </nav>
+    </header>
+
+    <section class="stats-line">
+      <span>配置数量：<strong id="totalConfig">0</strong></span>
+      <span>API Key 数量：<strong id="totalKeys">0</strong></span>
+      <span>模型数量：<strong id="totalModels">0</strong></span>
+      <span>代理状态：<strong id="proxyStatus">未配置</strong></span>
+    </section>
+
+    <section class="search-panel">
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="搜索..."
+      />
+    </section>
+
+    <main id="cardsContainer" class="cards-container"></main>
+  </div>
+
+  <div class="modal-mask" id="editorModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="editorTitle">新增配置</h2>
+        <button class="close-btn" id="closeEditorBtn" type="button">×</button>
+      </div>
+
+      <div class="modal-body">
+        <input id="editingId" type="hidden" />
+
+        <div class="form-group">
+          <label>名称 <span>*</span></label>
+          <input id="nameInput" type="text" placeholder="例如：OpenAI" />
+        </div>
+
+        <div class="form-group">
+          <label>服务商 <span>*</span></label>
+          <select id="providerInput">
+            <option value="openai">OpenAI</option>
+            <option value="google">Google Gemini</option>
+            <option value="claude">Claude / Anthropic</option>
+            <option value="custom">自定义 OpenAI 兼容</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>API Base URL <span>*</span></label>
+          <div class="inline-input">
+            <input id="baseUrlInput" type="text" placeholder="例如：https://api.openai.com/v1" />
+            <button class="small-btn" id="copyBaseInEditorBtn" type="button">复制</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="row-title">
+            <label>API Key 列表 <span>*</span></label>
+            <button class="small-btn" id="addKeyBtn" type="button">添加 Key</button>
+          </div>
+          <div id="keyRows" class="key-rows"></div>
+        </div>
+
+        <div class="form-group">
+          <label>获取模型方式</label>
+          <div class="radio-box">
+            <label>
+              <input type="radio" name="modelFetchMode" value="proxy" checked />
+              后端代理
+            </label>
+            <label>
+              <input type="radio" name="modelFetchMode" value="browser" />
+              浏览器直连
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="row-title">
+            <label>模型列表</label>
+            <div class="mini-actions">
+              <button class="small-btn" id="addModelBtn" type="button">添加模型</button>
+              <button class="danger-btn small-btn" id="clearEditModelsBtn" type="button">清空模型</button>
+            </div>
+          </div>
+
+          <input id="modelInput" type="text" placeholder="输入模型名，例如：gpt-4o-mini，回车添加" />
+
+          <div id="modelEditList" class="model-edit-list"></div>
+        </div>
+
+        <div id="editorStatus" class="status-text"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="ghost-btn" id="fetchModelsInEditorBtn" type="button">获取模型</button>
+        <button class="ghost-btn" id="cancelEditorBtn" type="button">取消</button>
+        <button class="primary-btn" id="saveConfigBtn" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="proxyModal">
+    <div class="modal small-modal">
+      <div class="modal-header">
+        <h2>后端代理设置</h2>
+        <button class="close-btn" id="closeProxyBtn" type="button">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="tip-box">
+          如果代理跑在电脑上，请填写电脑局域网地址，例如：
+          <code>http://192.168.1.8:8765</code>
+        </div>
+
+        <div class="form-group">
+          <label>后端代理地址</label>
+          <input
+            id="proxyUrlInput"
+            type="text"
+            placeholder="例如：http://192.168.1.8:8765 或 https://your-domain.com"
+          />
+        </div>
+
+        <div id="proxySettingStatus" class="status-text"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="ghost-btn" id="testProxyBtn" type="button">测试代理</button>
+        <button class="ghost-btn" id="clearProxyBtn" type="button">清空</button>
+        <button class="primary-btn" id="saveProxyBtn" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="testModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>模型测试</h2>
+        <button class="close-btn" id="closeTestBtn" type="button">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>选择配置 / API Key</label>
+          <select id="testKeySelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label>选择模型</label>
+          <select id="testModelSelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label>测试提示词</label>
+          <textarea id="testPromptInput" rows="4">用中文简单回复：Hello, who are you?</textarea>
+        </div>
+
+        <div class="test-actions">
+          <button class="primary-btn" id="proxyChatTestBtn" type="button">代理测试</button>
+          <button class="ghost-btn" id="browserChatTestBtn" type="button">浏览器测试</button>
+        </div>
+
+        <div class="form-group">
+          <label>返回结果</label>
+          <div id="testResultBox" class="result-box">暂无结果</div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="ghost-btn" id="closeTestFooterBtn" type="button">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="importModal">
+    <div class="modal small-modal">
+      <div class="modal-header">
+        <h2>导入 JSON</h2>
+        <button class="close-btn" id="closeImportBtn" type="button">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>粘贴 JSON 数据</label>
+          <textarea id="importTextarea" rows="10" placeholder="请粘贴导出的 JSON 数据"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="ghost-btn" id="readClipboardBtn" type="button">读取剪贴板</button>
+        <button class="ghost-btn" id="cancelImportBtn" type="button">取消</button>
+        <button class="primary-btn" id="confirmImportBtn" type="button">确认导入</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <nav id="nameIndexBar" class="name-index-bar">
+    <div id="nameIndexList" class="name-index-list"></div>
+  </nav>
+
+  <script src="./js/state.js"></script>
+  <script src="./js/utils.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "apikey-manager-proxy",
+  "version": "1.0.0",
+  "description": "API Key Manager local or remote proxy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}ss": "^4.19.2"
+  }
+}}
+}
+}
