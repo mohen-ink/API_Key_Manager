@@ -26,6 +26,7 @@
         <button class="nav-btn" id="modelTestBtn" type="button">模型测试</button>
         <button class="nav-btn" id="importBtn" type="button">导入</button>
         <button class="nav-btn" id="exportBtn" type="button">导出</button>
+        <button class="nav-btn" id="webdavBtn" type="button">WebDAV 备份</button>
         <button class="primary-btn" id="addBtn" type="button">新增配置</button>
       </nav>
     </header>
@@ -219,6 +220,69 @@
         <button class="ghost-btn" id="readClipboardBtn" type="button">读取剪贴板</button>
         <button class="ghost-btn" id="cancelImportBtn" type="button">取消</button>
         <button class="primary-btn" id="confirmImportBtn" type="button">确认导入</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="webdavModal">
+    <div class="modal small-modal">
+      <div class="modal-header">
+        <h2>WebDAV 备份</h2>
+        <button class="close-btn" id="closeWebdavBtn" type="button">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="tip-box">
+          支持坚果云、Nextcloud、Synology 等任何 WebDAV 服务。<br/>
+          浏览器直连可能被 CORS 拦截，此时需要启动后端代理。
+        </div>
+
+        <div class="form-group">
+          <label>WebDAV 服务器地址 <span>*</span></label>
+          <input id="webdavUrlInput" type="text" placeholder="例如：https://dav.jianguoyun.com/dav/" />
+        </div>
+
+        <div class="form-group">
+          <label>用户名</label>
+          <input id="webdavUsernameInput" type="text" placeholder="登录用户名" />
+        </div>
+
+        <div class="form-group">
+          <label>密码</label>
+          <input id="webdavPasswordInput" type="password" placeholder="未配置" />
+        </div>
+
+        <div class="form-group">
+          <label>远程目录</label>
+          <input id="webdavPathInput" type="text" placeholder="例如：/backup/apikey" />
+        </div>
+
+        <div class="webdav-separator"></div>
+
+        <div class="form-group">
+          <label>备份 / 恢复</label>
+          <div class="webdav-actions">
+            <button class="primary-btn" id="webdavBackupBtn" type="button">☁️ 上传备份</button>
+            <button class="ghost-btn" id="webdavRestoreBtn" type="button">⬇️ 下载恢复</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="row-title">
+            <label>恢复文件选择</label>
+            <button class="small-btn" id="webdavRefreshBtn" type="button">刷新列表</button>
+          </div>
+          <select id="webdavFileSelect">
+            <option value="">请先「刷新列表」加载备份文件</option>
+          </select>
+        </div>
+
+        <div id="webdavStatus" class="status-text"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="ghost-btn" id="testWebdavBtn" type="button">测试连接</button>
+        <button class="primary-btn" id="saveWebdavBtn" type="button">保存配置</button>
       </div>
     </div>
   </div>

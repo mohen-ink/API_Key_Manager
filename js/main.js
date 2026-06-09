@@ -154,6 +154,36 @@ function bindEvents() {
     els.exportBtn.addEventListener("click", exportRecords);
   }
 
+  if (els.webdavBtn) {
+    els.webdavBtn.addEventListener("click", openWebdavModal);
+  }
+
+  if (els.closeWebdavBtn) {
+    els.closeWebdavBtn.addEventListener("click", function () {
+      closeModal(els.webdavModal);
+    });
+  }
+
+  if (els.saveWebdavBtn) {
+    els.saveWebdavBtn.addEventListener("click", saveWebdavConfig);
+  }
+
+  if (els.testWebdavBtn) {
+    els.testWebdavBtn.addEventListener("click", testWebdavConnection);
+  }
+
+  if (els.webdavBackupBtn) {
+    els.webdavBackupBtn.addEventListener("click", doWebdavBackup);
+  }
+
+  if (els.webdavRestoreBtn) {
+    els.webdavRestoreBtn.addEventListener("click", doWebdavRestore);
+  }
+
+  if (els.webdavRefreshBtn) {
+    els.webdavRefreshBtn.addEventListener("click", refreshWebdavFileList);
+  }
+
   if (els.closeImportBtn) {
     els.closeImportBtn.addEventListener("click", function () {
       closeModal(els.importModal);
@@ -182,7 +212,8 @@ function bindEvents() {
     els.editorModal,
     els.proxyModal,
     els.testModal,
-    els.importModal
+    els.importModal,
+    els.webdavModal
   ].forEach(function (modal) {
     if (!modal) return;
     modal.addEventListener("click", function (e) {
@@ -198,6 +229,7 @@ function bindEvents() {
       closeModal(els.proxyModal);
       closeModal(els.testModal);
       closeModal(els.importModal);
+      closeModal(els.webdavModal);
     }
   });
 }
@@ -762,4 +794,177 @@ function scrollToNameCard(targetChar) {
       found.style.boxShadow = "";
     }, 800);
   }
+}
+
+/* ═══════════════════════════════════════════
+   WebDAV 备份/恢复
+   ═══════════════════════════════════════════ */
+
+function openWebdavModal() {
+  loadWebdavConfig();
+  openModal(AppState.els.webdavModal);
+  refreshWebdavFileList();
+}
+
+function loadWebdavConfig() {
+  var config = getWebdavConfig();
+  if (config) {
+    AppState.els.webdavUrlInput.value = config.url || "";
+    AppState.els.webdavUsernameInput.value = config.username || "";
+    AppState.els.webdavPasswordInput.value = "";
+    AppState.els.webdavPasswordInput.placeholder = config.password ? "已配置，留空保持不变" : "未配置";
+    AppState.els.webdavPathInput.value = config.path || "/";
+
+    if (config.password) {
+      setStatus(AppState.els.webdavStatus, "✓ 已配置 WebDAV", "success");
+    } else {
+      setStatus(AppState.els.webdavStatus, "");
+    }
+  } else {
+    AppState.els.webdavUrlInput.value = "";
+    AppState.els.webdavUsernameInput.value = "";
+    AppState.els.webdavPasswordInput.value = "";
+    AppState.els.webdavPasswordInput.placeholder = "未配置";
+    AppState.els.webdavPathInput.value = "/";
+    setStatus(AppState.els.webdavStatus, "");
+  }
+}
+
+function saveWebdavConfig() {
+  var url = AppState.els.webdavUrlInput.value.trim();
+  var username = AppState.els.webdavUsernameInput.value.trim();
+  var password = AppState.els.webdavPasswordInput.value;
+  var path = AppState.els.webdavPathInput.value.trim() || "/";
+
+  if (!url) {
+    setStatus(AppState.els.webdavStatus, "请填写 WebDAV 服务器地址", "error");
+    return;
+  }
+
+  // 如果密码框为空或仍是占位符，保留原密码
+  var existing = getWebdavConfig();
+  if (!password && existing && existing.password) {
+    password = existing.password;
+  }
+
+  var config = { url: url, username: username, password: password, path: path };
+  localStorage.setItem(WEBDAV_CONFIG_KEY, JSON.stringify(config));
+  AppState.els.webdavPasswordInput.placeholder = "已配置，留空保持不变";
+  AppState.els.webdavPasswordInput.value = "";
+  setStatus(AppState.els.webdavStatus, "✓ 已保存 WebDAV 配置", "success");
+  showToast("WebDAV 配置已保存", "success");
+}
+
+function testWebdavConnection() {
+  var url = AppState.els.webdavUrlInput.value.trim();
+  if (!url) {
+    setStatus(AppState.els.webdavStatus, "请先填写 WebDAV 服务器地址", "error");
+    return;
+  }
+
+  // 先保存当前输入，再测试
+  var username = AppState.els.webdavUsernameInput.value.trim();
+  var password = AppState.els.webdavPasswordInput.value;
+  var path = AppState.els.webdavPathInput.value.trim() || "/";
+  var existing = getWebdavConfig();
+  if (!password && existing && existing.password) {
+    password = existing.password;
+  }
+  var config = { url: url, username: username, password: password, path: path };
+  localStorage.setItem(WEBDAV_CONFIG_KEY, JSON.stringify(config));
+
+  setStatus(AppState.els.webdavStatus, "正在测试连接...", "");
+
+  webdavCheckConnection("auto").then(function () {
+    setStatus(AppState.els.webdavStatus, "✓ 连接成功！", "success");
+    showToast("WebDAV 连接成功", "success");
+  }).catch(function (err) {
+    setStatus(AppState.els.webdavStatus, "✕ " + err.message, "error");
+  });
+}
+
+function doWebdavBackup() {
+  if (!AppState.records.length) {
+    showToast("暂无配置可备份", "warning");
+    return;
+  }
+
+  var now = new Date();
+  var ts = now.getFullYear() + "-" +
+    String(now.getMonth() + 1).padStart(2, "0") + "-" +
+    String(now.getDate()).padStart(2, "0") + "_" +
+    String(now.getHours()).padStart(2, "0") + "-" +
+    String(now.getMinutes()).padStart(2, "0") + "-" +
+    String(now.getSeconds()).padStart(2, "0");
+  var filename = "api-key-manager-backup_" + ts + ".json";
+
+  setStatus(AppState.els.webdavStatus, "正在备份到 WebDAV...", "");
+
+  webdavBackup(AppState.records, "auto", filename).then(function () {
+    setStatus(AppState.els.webdavStatus, "✓ 备份成功！" + filename, "success");
+    showToast("已备份到 WebDAV", "success");
+    refreshWebdavFileList();
+  }).catch(function (err) {
+    setStatus(AppState.els.webdavStatus, "✕ 备份失败：" + err.message, "error");
+  });
+}
+
+function refreshWebdavFileList() {
+  var select = AppState.els.webdavFileSelect;
+  if (!select) return;
+
+  select.innerHTML = '<option value="">刷新中...</option>';
+  select.disabled = true;
+
+  webdavListFiles("auto").then(function (files) {
+    if (!files || !files.length) {
+      select.innerHTML = '<option value="">暂无备份文件</option>';
+    } else {
+      select.innerHTML = files.map(function (f) {
+        var label = f.name;
+        if (f.modified) label += " (" + f.modified.replace(/T/, " ").replace("Z", "") + ")";
+        return '<option value="' + escapeAttr(f.name) + '">' + escapeHtml(label) + '</option>';
+      }).join("");
+    }
+  }).catch(function (err) {
+    select.innerHTML = '<option value="">获取失败：' + escapeHtml(err.message) + '</option>';
+  }).then(function () {
+    select.disabled = false;
+  });
+}
+
+function doWebdavRestore() {
+  var select = AppState.els.webdavFileSelect;
+  var filename = select ? select.value : "";
+
+  if (!filename) {
+    setStatus(AppState.els.webdavStatus, "请先在列表中选择一个备份文件", "error");
+    return;
+  }
+
+  if (AppState.records.length > 0) {
+    if (!confirm("恢复将覆盖当前所有配置（" + AppState.records.length + " 条），确定继续吗？")) return;
+  }
+
+  setStatus(AppState.els.webdavStatus, "正在从 WebDAV 恢复 " + filename + "...", "");
+
+  webdavRestore("auto", filename).then(function (data) {
+    if (!Array.isArray(data)) {
+      setStatus(AppState.els.webdavStatus, "✕ 备份文件格式不正确", "error");
+      return;
+    }
+
+    AppState.records = data.map(function (item) {
+      return normalizeRecord(item);
+    });
+
+    saveRecords();
+    renderAll();
+    refreshTestSelects();
+
+    setStatus(AppState.els.webdavStatus, "✓ 恢复成功！共 " + AppState.records.length + " 条配置", "success");
+    showToast("已从 WebDAV 恢复 " + AppState.records.length + " 条配置", "success");
+  }).catch(function (err) {
+    setStatus(AppState.els.webdavStatus, "✕ 恢复失败：" + err.message, "error");
+  });
 }

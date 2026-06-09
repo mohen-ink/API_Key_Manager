@@ -5,6 +5,7 @@ function cacheElements() {
     "modelTestBtn",
     "importBtn",
     "exportBtn",
+    "webdavBtn",
     "addBtn",
     "searchInput",
     "cardsContainer",
@@ -56,6 +57,20 @@ function cacheElements() {
     "confirmImportBtn",
     "readClipboardBtn",
     "importTextarea",
+
+    "webdavModal",
+    "closeWebdavBtn",
+    "webdavUrlInput",
+    "webdavUsernameInput",
+    "webdavPasswordInput",
+    "webdavPathInput",
+    "saveWebdavBtn",
+    "testWebdavBtn",
+    "webdavBackupBtn",
+    "webdavRestoreBtn",
+    "webdavFileSelect",
+    "webdavRefreshBtn",
+    "webdavStatus",
 
     "toast"
   ].forEach(function (id) {

@@ -1,6 +1,7 @@
 var STORAGE_KEY = "apikey_vault_records_v4";
 var THEME_KEY = "apikey_vault_theme_v4";
 var PROXY_KEY = "apikey_vault_proxy_url_v4";
+var WEBDAV_CONFIG_KEY = "apikey_vault_webdav_config_v1";
 var MODEL_COLLAPSE_LIMIT = 8;
 
 var providerMap = {
